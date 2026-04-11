@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Finzo - Home</title>
+  <script src="../assets/js/branding.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/finzo.css" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "outline-variant": "#424753", "on-surface-variant": "#c2c6d5", "surface-container": "#1e2022",
+            "background": "#121416", "surface-container-high": "#282a2c", "surface-bright": "#37393b",
+            "on-primary-container": "#00285c", "on-surface": "#e2e2e5", "secondary": "var(--brand-secondary)",
+            "surface-container-highest": "#333537", "primary-fixed-dim": "#adc6ff", "tertiary": "#ffb4a9",
+            "tertiary-container": "#ff5544", "outline": "#8c909f", "primary-container": "#4d8efe",
+            "primary": "var(--brand-primary)", "surface-variant": "#333537"
+          }, fontFamily: { "headline": ["Plus Jakarta Sans"], "body": ["Manrope"], "label": ["Manrope"] }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-[#121416] font-body text-[#e2e2e5] min-h-screen overflow-y-auto">
+  <canvas id="dotCanvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="glass-nav sticky top-0 z-20 w-full px-6 py-3 flex items-center justify-between">
+    <a href="dashboard.html" class="flex items-center gap-2">
+      <div
+        class="w-8 h-8 bg-gradient-to-br from-[#adc6ff] to-[#4d8efe] rounded-lg flex items-center justify-center shadow-lg">
+        <span class="brand-icon material-symbols-outlined text-[#00285c] text-base">hub</span>
+      </div>
+      <span class="brand-name font-headline text-lg font-black text-white tracking-tighter">Finzo</span>
+    </a>
+    <div class="hidden md:flex items-center gap-5">
+      <a href="#features" class="font-label text-xs text-[#c2c6d5] hover:text-white transition-colors">Features</a>
+      <a href="#about" class="font-label text-xs text-[#c2c6d5] hover:text-white transition-colors">About</a>
+    </div>
+    <div class="flex items-center gap-2.5">
+      <a href="login.html"
+        class="font-headline font-bold text-xs text-[#adc6ff] px-4 py-2 rounded-lg border border-[#adc6ff]/30 hover:bg-[#adc6ff]/10 transition-colors">Sign
+        In</a>
+      <a href="signup.html" class="btn-primary text-xs px-4 py-2 rounded-lg">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-[#6ddd81] animate-pulse"></span>
+      <span class="font-label text-[0.65rem] uppercase tracking-widest text-[#6ddd81]">Now Live — Join the Beta</span>
+    </div>
+    <h1 class="font-headline text-4xl md:text-6xl font-black text-white tracking-tighter leading-tight mb-5">
+      Driven by data,<br />
+      <span class="bg-gradient-to-r from-[#adc6ff] to-[#6ddd81] bg-clip-text text-transparent">Built for growth.</span>
+    </h1>
+    <p class="text-[#c2c6d5] text-base max-w-xl mx-auto leading-relaxed mb-8">
+      <span class="brand-name">Finzo</span> Using data to help businesses make smarter financial decisions and grow. <!-- ✏️ Edit this -->
+    </p>
+    <div class="flex flex-wrap justify-center gap-3">
+      <a href="signup.html" class="btn-primary px-7 py-3 rounded-xl text-sm">Start for Free</a>
+      <a href="login.html" class="btn-secondary px-7 py-3 rounded-xl text-sm">Sign In</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="relative z-10 max-w-5xl mx-auto px-6 pb-20">
+    <h2 class="font-headline text-2xl font-black text-white text-center mb-8 tracking-tight">Why <span class="brand-name">Finzo</span>?</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- Feature Card — duplicate & edit -->
+      <div class="glass-card rounded-[1.5rem] p-6">
+        <div
+          class="w-10 h-10 bg-gradient-to-br from-[#adc6ff]/20 to-[#4d8efe]/20 rounded-xl flex items-center justify-center mb-4 border border-[#adc6ff]/20">
+          <span class="material-symbols-outlined text-[#adc6ff] text-lg">bolt</span>
+        </div>
+        <h3 class="font-headline text-sm font-bold text-white mb-2">Transaction Monitoring</h3> <!-- ✏️ -->
+        <p class="text-[#c2c6d5] text-xs leading-relaxed">The system continuously analyzes all business transactions.</p>
+      </div>
+      <div class="glass-card rounded-[1.5rem] p-6">
+        <div
+          class="w-10 h-10 bg-gradient-to-br from-[#6ddd81]/20 to-[#30a550]/20 rounded-xl flex items-center justify-center mb-4 border border-[#6ddd81]/20">
+          <span class="material-symbols-outlined text-[#6ddd81] text-lg">shield</span>
+        </div>
+        <h3 class="font-headline text-sm font-bold text-white mb-2">Fraud Detection</h3> <!-- ✏️ -->
+        <p class="text-[#c2c6d5] text-xs leading-relaxed">Detects suspicious activity.</p>
+      </div>
+      <div class="glass-card rounded-[1.5rem] p-6">
+        <div
+          class="w-10 h-10 bg-gradient-to-br from-[#ffb4a9]/20 to-[#ff5544]/20 rounded-xl flex items-center justify-center mb-4 border border-[#ffb4a9]/20">
+          <span class="material-symbols-outlined text-[#ffb4a9] text-lg">star</span>
+        </div>
+        <h3 class="font-headline text-sm font-bold text-white mb-2">AI Financial Advisor</h3> <!-- ✏️ -->
+        <p class="text-[#c2c6d5] text-xs leading-relaxed">AI automatically explains the financial situation..</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="relative z-10 max-w-2xl mx-auto px-6 pb-20 text-center">
+    <div class="glass-card rounded-[2rem] p-10">
+      <h2 class="font-headline text-2xl font-black text-white mb-3 tracking-tight">Ready to get started?</h2>
+      <p class="text-[#c2c6d5] text-sm mb-6">Join thousands already using <span class="brand-name">Finzo</span>.</p>
+      <a href="signup.html" class="btn-primary px-8 py-3 rounded-xl text-sm inline-block">Create Free Account</a>
+    </div>
+  </section>
+  
+
+  <script type="module">
+    import { auth, onAuthStateChanged } from '../assets/js/auth.js';
+    
+    // Redirect to dashboard if logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "dashboard.html";
+      }
+    });
+  </script>
+  <script src="../assets/js/finzo.js"></script>
+  <script type="module" src="../assets/js/firebase.js"></script>
+</body>
+
+</html>

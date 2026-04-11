@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Finzo - Profile</title>
+<script src="../assets/js/branding.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/css/finzo.css"/>
+<script>
+  tailwind.config = {
+    darkMode:"class",
+    theme:{ extend:{ colors:{
+      "outline-variant":"#424753","on-surface-variant":"#c2c6d5","surface-container":"#1e2022",
+      "background":"#121416","surface-container-high":"#282a2c","surface-bright":"#37393b",
+      "on-primary-container":"#00285c","on-surface":"#e2e2e5","secondary":"var(--brand-secondary)",
+      "surface-container-highest":"#333537","primary-fixed-dim":"#adc6ff","tertiary":"#ffb4a9",
+      "outline":"#8c909f","primary-container":"#4d8efe","primary":"var(--brand-primary)"
+    }, fontFamily:{"headline":["Plus Jakarta Sans"],"body":["Manrope"],"label":["Manrope"]} }}
+  }
+</script>
+</head>
+<body class="bg-[#121416] font-body text-[#e2e2e5] min-h-screen overflow-y-auto">
+<canvas id="dotCanvas"></canvas>
+
+<!-- Navbar -->
+<nav class="glass-nav sticky top-0 z-20 px-6 py-3 flex items-center justify-between">
+  <a href="dashboard.html" class="flex items-center gap-2 text-[#c2c6d5] hover:text-white transition-colors">
+    <span class="material-symbols-outlined text-base">arrow_back</span>
+    <span class="font-label text-xs">Back to Dashboard</span>
+  </a>
+  <a href="dashboard.html" class="flex items-center gap-2">
+    <div class="w-7 h-7 flex items-center justify-center rounded-lg shadow-lg" style="background: linear-gradient(135deg, var(--brand-primary), #4d8efe)">
+      <span class="brand-icon material-symbols-outlined text-[#00285c] text-sm">hub</span>
+    </div>
+    <span class="brand-name font-headline text-base font-black text-white tracking-tighter">Finzo</span>
+  </a>
+  <a href="settings.html" class="font-label text-xs text-[#c2c6d5] hover:text-white transition-colors">Settings</a>
+</nav>
+
+<main class="relative z-10 max-w-2xl mx-auto px-6 py-8">
+
+  <!-- Avatar & Name -->
+  <div class="glass-card rounded-[1.75rem] p-7 mb-5 flex flex-col items-center text-center">
+    <div id="profileAvatar" class="w-20 h-20 rounded-full bg-gradient-to-br from-[#adc6ff] to-[#4d8efe] flex items-center justify-center text-[#00285c] font-headline font-black text-3xl mb-4 shadow-xl shadow-[#adc6ff]/20">
+      U
+    </div>
+    <h2 id="profileName" class="font-headline text-xl font-black text-white mb-0.5">User Name</h2>
+    <p id="profileEmail" class="text-[#c2c6d5] text-xs mb-3">user@email.com</p>
+    <div class="flex gap-2">
+      <span class="badge badge-blue">Member</span>
+      <span class="badge badge-green">Active</span>
+    </div>
+  </div>
+
+  <!-- Editable Info -->
+  <div class="glass-card rounded-[1.75rem] p-6 mb-5">
+    <h3 class="font-headline text-sm font-bold text-white mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#adc6ff] text-base">edit</span>
+      Edit Profile
+    </h3>
+    <form id="profileForm" class="space-y-4">
+      <div class="space-y-1">
+        <label class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] ml-1">Full Name</label>
+        <input id="editName" class="finzo-input" placeholder="Your name" type="text" value=""/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] ml-1">Email</label>
+        <input id="editEmail" class="finzo-input" placeholder="your@email.com" type="email" value="" disabled style="opacity:0.6;cursor:not-allowed"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] ml-1">Bio</label>
+        <textarea id="editBio" class="finzo-input resize-none h-20 pt-3" placeholder="Tell us about yourself..."></textarea>
+      </div>
+      <button class="btn-primary w-full py-3 rounded-xl" type="submit">Save Changes</button>
+    </form>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="glass-card rounded-[1.75rem] p-6 border border-[#ffb4a9]/20">
+    <h3 class="font-headline text-sm font-bold text-[#ffb4a9] mb-3 flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">warning</span>
+      Danger Zone
+    </h3>
+    <p class="text-[#c2c6d5] text-xs mb-4">Deleting your account is permanent and cannot be undone.</p>
+    <button class="btn-danger text-sm px-5 py-2.5 rounded-xl" onclick="showToast('Account deletion requires confirmation','error')">Delete Account</button>
+  </div>
+
+</main>
+
+<script src="../assets/js/finzo.js"></script>
+<script src="../assets/js/api.js"></script>
+<script type="module" src="../assets/js/firebase.js"></script>
+<script type="module">
+  import { requireAuth, logout } from '../assets/js/auth.js';
+  import { updateProfile } from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js';
+
+  requireAuth('login.html').then(async (user) => {
+    // Populate header from Firebase
+    const setLocalUI = (name, email) => {
+      const initial = (name || email || 'U')[0].toUpperCase();
+      document.getElementById('profileAvatar').textContent = initial;
+      document.getElementById('profileName').textContent = name || 'User';
+      document.getElementById('profileEmail').textContent = email || '';
+      document.getElementById('editName').value  = name || '';
+      document.getElementById('editEmail').value = email || '';
+    };
+
+    setLocalUI(user.displayName, user.email);
+
+    // Load extra info from Backend
+    try {
+      const profile = await FinzoAPI.getProfile();
+      if (profile.success) {
+        if (profile.name) document.getElementById('editName').value = profile.name;
+        if (profile.bio) document.getElementById('editBio').value = profile.bio;
+        if (profile.name) document.getElementById('profileName').textContent = profile.name;
+      }
+    } catch (err) { console.error("Backend profile load error:", err); }
+
+    // Save profile changes
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newName = document.getElementById('editName').value.trim();
+      const newBio = document.getElementById('editBio').value.trim();
+
+      try {
+        // Update Firebase
+        await updateProfile(user, { displayName: newName });
+        // Update Backend
+        await FinzoAPI.updateProfile({ name: newName, bio: newBio });
+
+        document.getElementById('profileName').textContent = newName;
+        document.getElementById('profileAvatar').textContent = newName[0]?.toUpperCase() || 'U';
+        showToast('Profile saved!', 'success');
+      } catch (err) {
+        console.error("Profile save error:", err);
+        showToast('Failed to update profile.', 'error');
+      }
+    });
+  });
+
+  // Logout via back button (Settings)
+  const logoutLink = document.querySelector('a[href="settings.html"]');
+</script>
+</body>
+</html>

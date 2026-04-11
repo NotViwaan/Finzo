@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Finzo - Settings</title>
+<script src="../assets/js/branding.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/css/finzo.css"/>
+<script>
+  tailwind.config = {
+    darkMode:"class",
+    theme:{ extend:{ colors:{
+      "outline-variant":"#424753","on-surface-variant":"#c2c6d5","background":"#121416",
+      "surface-container-high":"#282a2c","on-primary-container":"#00285c","on-surface":"#e2e2e5",
+      "secondary":"var(--brand-secondary)","surface-container-highest":"#333537","tertiary":"#ffb4a9",
+      "outline":"#8c909f","primary-container":"#4d8efe","primary":"var(--brand-primary)"
+    }, fontFamily:{"headline":["Plus Jakarta Sans"],"body":["Manrope"],"label":["Manrope"]} }}
+  }
+</script>
+<style>
+  .toggle { position:relative; width:40px; height:22px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; inset:0; background:#424753; border-radius:999px; cursor:pointer; transition:0.3s; }
+  .slider:before { content:''; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s; }
+  input:checked + .slider { background: var(--brand-primary); }
+  input:checked + .slider:before { transform:translateX(18px); }
+</style>
+</head>
+<body class="bg-[#121416] font-body text-[#e2e2e5] min-h-screen overflow-y-auto">
+<canvas id="dotCanvas"></canvas>
+
+<nav class="glass-nav sticky top-0 z-20 px-6 py-3 flex items-center justify-between">
+  <a href="dashboard.html" class="flex items-center gap-2 text-[#c2c6d5] hover:text-white transition-colors">
+    <span class="material-symbols-outlined text-base">arrow_back</span>
+    <span class="font-label text-xs">Dashboard</span>
+  </a>
+  <span class="font-headline text-base font-bold text-white">Settings</span>
+  <a href="profile.html" class="font-label text-xs text-[#c2c6d5] hover:text-white transition-colors">Profile</a>
+</nav>
+
+<main class="relative z-10 max-w-xl mx-auto px-6 py-8 space-y-5">
+
+
+  <section class="glass-card rounded-[1.5rem] p-6">
+    <h3 class="font-headline text-sm font-bold text-white mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#adc6ff] text-base">notifications</span>
+      Notifications
+    </h3>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-white">Email Notifications</p>
+          <p class="text-[0.65rem] text-[#c2c6d5]">Receive updates via email</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label>
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-white">Push Notifications</p>
+          <p class="text-[0.65rem] text-[#c2c6d5]">Browser push alerts</p>
+        </div>
+        <label class="toggle"><input type="checkbox"/><span class="slider"></span></label>
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-white">Weekly Digest</p>
+          <p class="text-[0.65rem] text-[#c2c6d5]">Summary every Monday</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="glass-card rounded-[1.5rem] p-6">
+    <h3 class="font-headline text-sm font-bold text-white mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#6ddd81] text-base">lock</span>
+      Privacy
+    </h3>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-white">Public Profile</p>
+          <p class="text-[0.65rem] text-[#c2c6d5]">Anyone can view your profile</p>
+        </div>
+        <label class="toggle"><input type="checkbox"/><span class="slider"></span></label>
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-white">Analytics Tracking</p>
+          <p class="text-[0.65rem] text-[#c2c6d5]">Help improve the product</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="glass-card rounded-[1.5rem] p-6">
+    <h3 class="font-headline text-sm font-bold text-white mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#ffb4a9] text-base">key</span>
+      Change Password
+    </h3>
+    <form class="space-y-3" onsubmit="showToast('Password updated!','success'); return false;">
+      <input class="finzo-input text-black" placeholder="Current password" type="password"/>
+      <input class="finzo-input text-black" placeholder="New password" type="password"/>
+      <input class="finzo-input text-black" placeholder="Confirm new password" type="password"/>
+      <button class="btn-primary w-full py-2.5 rounded-xl text-sm" type="submit">Update Password</button>
+    </form>
+  </section>
+
+  <button class="btn-primary w-full py-3 rounded-xl" onclick="showToast('Settings saved!','success')">Save All Settings</button>
+
+</main>
+
+<script src="../assets/js/finzo.js"></script>
+<script type="module" src="../assets/js/firebase.js"></script>
+<script type="module">
+  import { requireAuth } from '../assets/js/auth.js';
+  requireAuth('login.html');
+</script>
+</body>
+</html>

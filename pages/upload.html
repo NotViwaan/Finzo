@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Finzo - Upload Statement</title>
+<script src="../assets/js/branding.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/css/finzo.css"/>
+<script>
+  tailwind.config = {
+    darkMode:"class",
+    theme:{ extend:{ colors:{
+      "outline-variant":"#424753","on-surface-variant":"#c2c6d5","surface-container":"#1e2022",
+      "background":"#121416","surface-container-high":"#282a2c","surface-bright":"#37393b",
+      "on-primary-container":"#00285c","on-surface":"#e2e2e5","secondary":"var(--brand-secondary)",
+      "surface-container-highest":"#333537","primary-fixed-dim":"#adc6ff","tertiary":"#ffb4a9",
+      "tertiary-container":"#ff5544","outline":"#8c909f","primary-container":"#4d8efe",
+      "primary":"var(--brand-primary)","surface-variant":"#333537"
+    }, fontFamily:{"headline":["Plus Jakarta Sans"],"body":["Manrope"],"label":["Manrope"]} }}
+  }
+</script>
+<style>
+  .sidebar { width: 220px; min-height: 100vh; background: rgba(18,20,22,0.9); backdrop-filter: blur(20px); border-right: 1px solid rgba(140,144,159,0.1); }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:8px 14px; border-radius:10px; font-size:0.8rem; font-family:'Manrope',sans-serif; font-weight:600; color:#c2c6d5; transition:all 0.2s; cursor:pointer; text-decoration:none; }
+  .nav-link:hover { background:rgba(173,198,255,0.08); color:#fff; }
+  .nav-link.active { background:rgba(173,198,255,0.12); color:#adc6ff; }
+
+  .drop-zone { border: 2px dashed rgba(173,198,255,0.25); border-radius: 1.25rem; transition: all 0.3s; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: rgba(173,198,255,0.6); background: rgba(173,198,255,0.04); }
+
+  .progress-bar { height: 4px; border-radius: 9999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #adc6ff, #4d8efe); transition: width 0.4s ease; }
+
+  .table-row { border-bottom: 1px solid rgba(140,144,159,0.08); }
+  .table-row:hover { background: rgba(173,198,255,0.03); }
+
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:9999px; font-size:0.6rem; font-weight:700; font-family:'Manrope',sans-serif; text-transform:uppercase; letter-spacing:0.05em; }
+  .badge-credit { background:rgba(109,221,129,0.12); color:#6ddd81; }
+  .badge-debit { background:rgba(255,180,169,0.12); color:#ffb4a9; }
+  .badge-flagged { background:rgba(255,85,68,0.15); color:#ff8a7d; }
+
+  .glass-card { background: rgba(30,32,34,0.65); backdrop-filter: blur(24px); border: 1px solid rgba(140,144,159,0.1); }
+  .glass-nav { background: rgba(18,20,22,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(140,144,159,0.08); }
+
+  #dotCanvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+  .step-dot { width:28px; height:28px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:800; font-family:'Plus Jakarta Sans',sans-serif; flex-shrink:0; }
+  .step-dot.done { background:rgba(109,221,129,0.15); color:#6ddd81; border:1px solid rgba(109,221,129,0.3); }
+  .step-dot.active { background:rgba(173,198,255,0.15); color:#adc6ff; border:1px solid rgba(173,198,255,0.3); }
+  .step-dot.pending { background:rgba(140,144,159,0.08); color:#8c909f; border:1px solid rgba(140,144,159,0.15); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: fadeUp 0.4s ease forwards; }
+</style>
+</head>
+<body class="bg-[#121416] font-body text-[#e2e2e5] min-h-screen overflow-y-auto flex">
+<canvas id="dotCanvas"></canvas>
+
+<!-- Sidebar -->
+<aside class="sidebar fixed top-0 left-0 z-20 hidden md:flex flex-col py-5 px-3">
+  <a href="dashboard.html" class="flex items-center gap-2 px-3 mb-8">
+    <div class="w-8 h-8 flex items-center justify-center rounded-lg" style="background: linear-gradient(135deg, var(--brand-primary, #adc6ff), #4d8efe)">
+      <span class="brand-icon material-symbols-outlined text-[#00285c] text-base">hub</span>
+    </div>
+    <span class="brand-name font-headline text-base font-black text-white tracking-tighter">Finzo</span>
+  </a>
+  <nav class="flex flex-col gap-1 flex-1">
+    <a href="dashboard.html" class="nav-link">
+      <span class="material-symbols-outlined text-base">dashboard</span> Dashboard
+    </a>
+    <a href="upload.html" class="nav-link active">
+      <span class="material-symbols-outlined text-base">upload_file</span> Upload Statement
+    </a>
+    <a href="transactions.html" class="nav-link">
+      <span class="material-symbols-outlined text-base">receipt_long</span> Transactions
+    </a>
+    <a href="fraud.html" class="nav-link">
+      <span class="material-symbols-outlined text-base">security</span> Fraud Alerts
+    </a>
+    <a href="advisor.html" class="nav-link">
+      <span class="material-symbols-outlined text-base">smart_toy</span> AI Advisor
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="material-symbols-outlined text-base">person</span> Profile
+    </a>
+    <a href="settings.html" class="nav-link">
+      <span class="material-symbols-outlined text-base">settings</span> Settings
+    </a>
+  </nav>
+  <a href="login.html" class="nav-link text-[#ffb4a9] mt-4" id="logoutBtn">
+    <span class="material-symbols-outlined text-base">logout</span> Logout
+  </a>
+</aside>
+
+<!-- Main -->
+<div class="flex-1 md:ml-[220px] flex flex-col min-h-screen">
+  <header class="glass-nav sticky top-0 z-10 px-6 py-3 flex items-center justify-between">
+    <h1 class="font-headline text-base font-bold text-white">Upload Statement</h1>
+    <div class="flex items-center gap-3">
+      <button class="w-8 h-8 rounded-full glass-card flex items-center justify-center hover:border-[#adc6ff]/40 transition-colors">
+        <span class="material-symbols-outlined text-[#c2c6d5] text-base">notifications</span>
+      </button>
+      <a href="profile.html" id="userAvatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-[#adc6ff] to-[#4d8efe] flex items-center justify-center text-[#00285c] font-bold text-xs">U</a>
+    </div>
+  </header>
+
+  <main class="relative z-10 flex-1 px-6 py-6">
+    <!-- Page header -->
+    <div class="mb-6">
+      <h2 class="font-headline text-xl font-black text-white tracking-tight mb-0.5">Analyze Bank Statement</h2>
+      <p class="text-[#c2c6d5] text-sm">Upload your CSV or Excel file — we'll parse, categorize, and flag anomalies instantly.</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex items-center gap-2" id="step1indicator">
+        <div class="step-dot active" id="dot1">1</div>
+        <span class="text-xs font-semibold text-[#adc6ff]" id="step1label">Upload File</span>
+      </div>
+      <div class="h-px flex-1 bg-[#424753]/40"></div>
+      <div class="flex items-center gap-2">
+        <div class="step-dot pending" id="dot2">2</div>
+        <span class="text-xs font-semibold text-[#8c909f]" id="step2label">Processing</span>
+      </div>
+      <div class="h-px flex-1 bg-[#424753]/40"></div>
+      <div class="flex items-center gap-2">
+        <div class="step-dot pending" id="dot3">3</div>
+        <span class="text-xs font-semibold text-[#8c909f]" id="step3label">Results</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div id="stepUpload">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+        <!-- Drop zone -->
+        <div class="md:col-span-2">
+          <div id="dropZone" class="drop-zone p-10 flex flex-col items-center justify-center text-center cursor-pointer min-h-[200px]" onclick="document.getElementById('fileInput').click()">
+            <div class="w-14 h-14 rounded-2xl bg-[#adc6ff]/10 border border-[#adc6ff]/20 flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-[#adc6ff] text-2xl">cloud_upload</span>
+            </div>
+            <p class="font-headline text-sm font-bold text-white mb-1">Drop your bank statement here</p>
+            <p class="text-[#8c909f] text-xs mb-4">Supports CSV, XLSX, XLS · Max 10MB</p>
+            <button class="px-5 py-2 rounded-xl text-xs font-bold font-headline" style="background:linear-gradient(135deg,#adc6ff,#4d8efe);color:#00285c;">Browse Files</button>
+          </div>
+          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="hidden" onchange="handleFile(this.files[0])"/>
+        </div>
+
+        <!-- Format guide -->
+        <div class="glass-card rounded-[1.25rem] p-5">
+          <h3 class="font-headline text-xs font-bold text-white mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#adc6ff] text-base">info</span>
+            Supported Formats
+          </h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-[#6ddd81] text-sm mt-0.5">check_circle</span>
+              <div>
+                <p class="text-xs font-semibold text-white">CSV / Excel</p>
+                <p class="text-[0.65rem] text-[#8c909f] leading-relaxed">Date, Description, Amount, Balance columns</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-[#6ddd81] text-sm mt-0.5">check_circle</span>
+              <div>
+                <p class="text-xs font-semibold text-white">Bank exports</p>
+                <p class="text-[0.65rem] text-[#8c909f] leading-relaxed">HDFC, SBI, ICICI, Axis, Kotak</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-[#6ddd81] text-sm mt-0.5">check_circle</span>
+              <div>
+                <p class="text-xs font-semibold text-white">Auto-detection</p>
+                <p class="text-[0.65rem] text-[#8c909f] leading-relaxed">Column headers detected automatically</p>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-[#424753]/30">
+              <p class="text-[0.6rem] uppercase tracking-widest text-[#8c909f] mb-2 font-label">Expected columns</p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-0.5 rounded-md bg-[#adc6ff]/10 text-[#adc6ff] text-[0.6rem] font-bold">Date</span>
+                <span class="px-2 py-0.5 rounded-md bg-[#adc6ff]/10 text-[#adc6ff] text-[0.6rem] font-bold">Description</span>
+                <span class="px-2 py-0.5 rounded-md bg-[#adc6ff]/10 text-[#adc6ff] text-[0.6rem] font-bold">Amount</span>
+                <span class="px-2 py-0.5 rounded-md bg-[#adc6ff]/10 text-[#adc6ff] text-[0.6rem] font-bold">Balance</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent uploads -->
+      <div class="glass-card rounded-[1.5rem] p-5">
+        <h3 class="font-headline text-sm font-bold text-white mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#c2c6d5] text-base">history</span>
+          Recent Uploads
+        </h3>
+        <div id="recentUploads">
+          <div class="text-center py-8 text-[#8c909f] text-xs">No uploads yet. Upload your first statement above.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Processing -->
+    <div id="stepProcessing" class="hidden">
+      <div class="glass-card rounded-[2rem] p-10 text-center max-w-md mx-auto fade-up">
+        <div class="w-16 h-16 rounded-2xl bg-[#adc6ff]/10 border border-[#adc6ff]/20 flex items-center justify-center mx-auto mb-5">
+          <span class="material-symbols-outlined text-[#adc6ff] text-2xl spin">sync</span>
+        </div>
+        <h3 class="font-headline text-base font-bold text-white mb-2" id="processingMsg">Parsing your file...</h3>
+        <p class="text-[#8c909f] text-xs mb-6" id="processingDetail">Reading columns and detecting format</p>
+        <div class="progress-bar mb-2">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <p class="text-[0.65rem] text-[#8c909f]" id="progressPct">0%</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Results -->
+    <div id="stepResults" class="hidden">
+      <!-- Summary cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 fade-up">
+        <div class="glass-card rounded-[1.25rem] p-4">
+          <p class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] mb-1">Transactions</p>
+          <p class="font-headline text-2xl font-black text-white" id="rTotal">—</p>
+          <p class="text-[0.65rem] text-[#adc6ff] mt-1">Rows parsed</p>
+        </div>
+        <div class="glass-card rounded-[1.25rem] p-4">
+          <p class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] mb-1">Total Debits</p>
+          <p class="font-headline text-2xl font-black text-white" id="rDebits">—</p>
+          <p class="text-[0.65rem] text-[#ffb4a9] mt-1">Money out</p>
+        </div>
+        <div class="glass-card rounded-[1.25rem] p-4">
+          <p class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] mb-1">Total Credits</p>
+          <p class="font-headline text-2xl font-black text-white" id="rCredits">—</p>
+          <p class="text-[0.65rem] text-[#6ddd81] mt-1">Money in</p>
+        </div>
+        <div class="glass-card rounded-[1.25rem] p-4">
+          <p class="font-label text-[0.6rem] uppercase tracking-widest text-[#c2c6d5] mb-1">Flagged</p>
+          <p class="font-headline text-2xl font-black text-white" id="rFlagged">—</p>
+          <p class="text-[0.65rem] text-[#ffb4a9] mt-1">Anomalies found</p>
+        </div>
+      </div>
+
+      <!-- Table + actions -->
+      <div class="glass-card rounded-[1.5rem] p-5 fade-up">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-headline text-sm font-bold text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#adc6ff] text-base">table_view</span>
+            Parsed Transactions
+            <span id="syncStatus" class="ml-2 px-2 py-0.5 rounded text-[0.6rem] font-bold"></span>
+          </h3>
+          <div class="flex gap-2">
+            <button onclick="window.location.href='dashboard.html'" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.65rem] font-bold font-headline bg-gradient-to-r from-[#adc6ff] to-[#4d8efe] text-[#00285c] hover:opacity-90 transition-all">
+              <span class="material-symbols-outlined text-xs">dashboard</span> Go to Dashboard
+            </button>
+            <button onclick="goToFraud()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.65rem] font-bold font-headline bg-[#ff5544]/15 text-[#ffb4a9] hover:bg-[#ff5544]/25 transition-colors">
+              <span class="material-symbols-outlined text-xs">security</span> View Fraud Alerts
+            </button>
+            <button onclick="goToAdvisor()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.65rem] font-bold font-headline bg-[#adc6ff]/10 text-[#adc6ff] hover:bg-[#adc6ff]/20 transition-colors">
+              <span class="material-symbols-outlined text-xs">smart_toy</span> Ask AI Advisor
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <button onclick="filterTable('all')" class="filter-btn active px-3 py-1 rounded-lg text-[0.65rem] font-bold bg-[#adc6ff]/12 text-[#adc6ff]" data-filter="all">All</button>
+          <button onclick="filterTable('credit')" class="filter-btn px-3 py-1 rounded-lg text-[0.65rem] font-bold text-[#8c909f] hover:text-white transition-colors" data-filter="credit">Credits</button>
+          <button onclick="filterTable('debit')" class="filter-btn px-3 py-1 rounded-lg text-[0.65rem] font-bold text-[#8c909f] hover:text-white transition-colors" data-filter="debit">Debits</button>
+          <button onclick="filterTable('flagged')" class="filter-btn px-3 py-1 rounded-lg text-[0.65rem] font-bold text-[#8c909f] hover:text-white transition-colors" data-filter="flagged">⚠ Flagged</button>
+          <div class="ml-auto">
+            <input type="text" id="searchBox" placeholder="Search..." oninput="searchTable(this.value)" class="bg-[#1e2022] border border-[#424753]/40 rounded-lg px-3 py-1 text-xs text-white placeholder:text-[#8c909f] outline-none focus:border-[#adc6ff]/40 w-40"/>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-[#424753]/30">
+                <th class="text-left py-2 px-3 font-label text-[0.6rem] uppercase tracking-widest text-[#8c909f]">Date</th>
+                <th class="text-left py-2 px-3 font-label text-[0.6rem] uppercase tracking-widest text-[#8c909f]">Description</th>
+                <th class="text-left py-2 px-3 font-label text-[0.6rem] uppercase tracking-widest text-[#8c909f]">Category</th>
+                <th class="text-right py-2 px-3 font-label text-[0.6rem] uppercase tracking-widest text-[#8c909f]">Amount</th>
+                <th class="text-right py-2 px-3 font-label text-[0.6rem] uppercase tracking-widest text-[#8c909f]">Balance</th>
+                <th class="text-center py-2 px-3 font-label text-[0.6rem] uppercase tracking-widest text-[#8c909f]">Status</th>
+              </tr>
+            </thead>
+            <tbody id="txnTable"></tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between">
+          <p class="text-[0.65rem] text-[#8c909f]" id="tableCount">Showing — rows</p>
+          <button onclick="uploadAnother()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.65rem] font-bold font-headline border border-[#424753]/40 text-[#c2c6d5] hover:border-[#adc6ff]/40 hover:text-[#adc6ff] transition-all">
+            <span class="material-symbols-outlined text-xs">upload_file</span> Upload Another
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../assets/js/finzo.js"></script>
+<script src="../assets/js/api.js"></script>
+<script type="module" src="../assets/js/firebase.js"></script>
+<script type="module">
+  import { requireAuth, logout } from '../assets/js/auth.js';
+  requireAuth('login.html').then((user) => {
+    const avatar = document.getElementById('userAvatar');
+    if (avatar) avatar.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
+    loadRecentUploads(); // Wait for auth
+  });
+  document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await logout();
+    window.location.href = 'login.html';
+  });
+</script>
+<script>
+  let parsedData = [];
+  let currentFilter = 'all';
+
+  // Drag & drop
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    if (!file.name.match(/\.(csv|xlsx|xls)$/i)) {
+      alert('Please upload a CSV or Excel file.');
+      return;
+    }
+    showStep('processing');
+    simulateProcessing(file);
+  }
+
+  function showStep(step) {
+    document.getElementById('stepUpload').classList.add('hidden');
+    document.getElementById('stepProcessing').classList.add('hidden');
+    document.getElementById('stepResults').classList.add('hidden');
+    document.getElementById('step' + (step === 'upload' ? 'Upload' : step === 'processing' ? 'Processing' : 'Results')).classList.remove('hidden');
+
+    if (step === 'processing') {
+      document.getElementById('dot1').className = 'step-dot done'; document.getElementById('dot1').innerHTML = '✓';
+      document.getElementById('dot2').className = 'step-dot active'; document.getElementById('step2label').className = 'text-xs font-semibold text-[#adc6ff]';
+    }
+    if (step === 'results') {
+      document.getElementById('dot2').className = 'step-dot done'; document.getElementById('dot2').innerHTML = '✓';
+      document.getElementById('dot3').className = 'step-dot active'; document.getElementById('step3label').className = 'text-xs font-semibold text-[#adc6ff]';
+    }
+  }
+
+  const processingSteps = [
+    { msg: 'Parsing your file...', detail: 'Reading columns and detecting format', pct: 15 },
+    { msg: 'Detecting bank format...', detail: 'Matching known bank statement templates', pct: 35 },
+    { msg: 'Categorizing transactions...', detail: 'Classifying merchants and payment types', pct: 60 },
+    { msg: 'Running anomaly detection...', detail: 'Checking for unusual patterns and duplicates', pct: 80 },
+    { msg: 'Generating summary...', detail: 'Computing totals, trends, and insights', pct: 95 },
+  ];
+
+  function simulateProcessing(file) {
+    let i = 0;
+    const fill = document.getElementById('progressFill');
+    const msg = document.getElementById('processingMsg');
+    const detail = document.getElementById('processingDetail');
+    const pct = document.getElementById('progressPct');
+
+    const interval = setInterval(async () => {
+      if (i < processingSteps.length) {
+        const s = processingSteps[i];
+        msg.textContent = s.msg;
+        detail.textContent = s.detail;
+        fill.style.width = s.pct + '%';
+        pct.textContent = s.pct + '%';
+        i++;
+      } else {
+        clearInterval(interval);
+        fill.style.width = '100%';
+        pct.textContent = '100%';
+
+        // Process file data
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            parsedData = parseCSV(e.target.result);
+            if (!parsedData || !parsedData.length) throw new Error("No data found in file.");
+            
+            const res = await FinzoAPI.saveTransactions(parsedData, file.name);
+            if (res.success) {
+              showResults(true);
+              showToast(`Saved ${res.count} transactions to backend.`, "success");
+            } else {
+              throw new Error(res.error || "Backend failed to save.");
+            }
+          } catch (err) {
+            console.error("Upload error:", err);
+            showToast(`Backend sync failed: ${err.message}. Showing local preview.`, "error");
+            if (parsedData && parsedData.length) showResults(false);
+            else showStep('upload');
+          }
+        };
+        reader.onerror = () => {
+          showToast("File reading error.", "error");
+          showStep('upload');
+        };
+
+        if (file.name.endsWith('.csv')) {
+          reader.readAsText(file);
+        } else {
+          showToast("XLSX parsing not fully implemented in this demo. Showing demo data.", "info");
+          parsedData = generateDemoData();
+          try {
+            const res = await FinzoAPI.saveTransactions(parsedData, "demo_data.xlsx");
+            showResults(res.success);
+          } catch (err) {
+            showResults(false);
+          }
+        }
+      }
+    }, 700);
+  }
+
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return generateDemoData();
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+    const dateIdx = headers.findIndex(h => h.includes('date'));
+    const descIdx = headers.findIndex(h => h.includes('desc') || h.includes('narr') || h.includes('particular'));
+    const amtIdx = headers.findIndex(h => h.includes('amount') || h.includes('amt'));
+    const balIdx = headers.findIndex(h => h.includes('balance') || h.includes('bal'));
+
+    if (dateIdx === -1 || amtIdx === -1) return generateDemoData();
+
+    return lines.slice(1).map((line, idx) => {
+      const cols = line.split(',').map(c => c.trim().replace(/"/g,''));
+      const amt = parseFloat(cols[amtIdx]) || 0;
+      return {
+        id: idx,
+        date: cols[dateIdx] || '—',
+        description: descIdx >= 0 ? cols[descIdx] : 'Transaction',
+        amount: amt,
+        balance: balIdx >= 0 ? parseFloat(cols[balIdx]) || 0 : 0,
+        type: amt >= 0 ? 'credit' : 'debit',
+        category: guessCategory(descIdx >= 0 ? cols[descIdx] : ''),
+        flagged: Math.abs(amt) > 50000 || isDuplicate(line, idx, lines)
+      };
+    }).filter(r => r.date !== '—');
+  }
+
+  function isDuplicate(line, idx, lines) {
+    return lines.slice(0, idx).includes(line) && idx > 0;
+  }
+
+  function guessCategory(desc) {
+    desc = (desc || '').toLowerCase();
+    if (desc.includes('salary') || desc.includes('payroll')) return 'Salary';
+    if (desc.includes('amazon') || desc.includes('flipkart') || desc.includes('shop')) return 'Shopping';
+    if (desc.includes('zomato') || desc.includes('swiggy') || desc.includes('food')) return 'Food';
+    if (desc.includes('uber') || desc.includes('ola') || desc.includes('petrol')) return 'Transport';
+    if (desc.includes('emi') || desc.includes('loan')) return 'EMI/Loan';
+    if (desc.includes('atm') || desc.includes('cash')) return 'Cash';
+    if (desc.includes('electricity') || desc.includes('water') || desc.includes('bill')) return 'Utilities';
+    if (desc.includes('neft') || desc.includes('imps') || desc.includes('upi')) return 'Transfer';
+    return 'Other';
+  }
+
+  function generateDemoData() {
+    const txns = [
+      { date:'2024-01-03', description:'SALARY CREDIT ACME CORP', amount:85000, balance:92000, type:'credit', category:'Salary', flagged:false },
+      { date:'2024-01-04', description:'AMAZON PAY', amount:-4299, balance:87701, type:'debit', category:'Shopping', flagged:false },
+      { date:'2024-01-05', description:'ZOMATO ORDER', amount:-348, balance:87353, type:'debit', category:'Food', flagged:false },
+      { date:'2024-01-06', description:'NEFT TRANSFER UNKNOWN', amount:-75000, balance:12353, type:'debit', category:'Transfer', flagged:true },
+      { date:'2024-01-07', description:'UPI FLIPKART', amount:-2199, balance:10154, type:'debit', category:'Shopping', flagged:false },
+      { date:'2024-01-08', description:'ATM WITHDRAWAL', amount:-5000, balance:5154, type:'debit', category:'Cash', flagged:false },
+      { date:'2024-01-09', description:'ELECTRICITY BILL MSEB', amount:-1850, balance:3304, type:'debit', category:'Utilities', flagged:false },
+      { date:'2024-01-10', description:'LOAN EMI HDFC', amount:-18000, balance:-14696, type:'debit', category:'EMI/Loan', flagged:false },
+      { date:'2024-01-11', description:'CREDIT CARD PAYMENT', amount:-12000, balance:-26696, type:'debit', category:'Transfer', flagged:false },
+      { date:'2024-01-12', description:'NEFT TRANSFER UNKNOWN', amount:-75000, balance:-101696, type:'debit', category:'Transfer', flagged:true },
+      { date:'2024-01-13', description:'UPI PETROL PUMP', amount:-2500, balance:-104196, type:'debit', category:'Transport', flagged:false },
+      { date:'2024-01-15', description:'FREELANCE PAYMENT', amount:25000, balance:-79196, type:'credit', category:'Other', flagged:false },
+    ];
+    return txns.map((t,i) => ({ ...t, id: i }));
+  }
+
+  function showResults(synced = true) {
+    showStep('results');
+    const total = parsedData.length;
+    const debits = parsedData.filter(t => t.type === 'debit').reduce((s,t) => s + Math.abs(t.amount), 0);
+    const credits = parsedData.filter(t => t.type === 'credit').reduce((s,t) => s + t.amount, 0);
+    const flagged = parsedData.filter(t => t.flagged).length;
+
+    document.getElementById('rTotal').textContent = total;
+    document.getElementById('rDebits').textContent = '₹' + debits.toLocaleString('en-IN');
+    document.getElementById('rCredits').textContent = '₹' + credits.toLocaleString('en-IN');
+    document.getElementById('rFlagged').textContent = flagged;
+
+    // Update sync status
+    const statusEl = document.getElementById('syncStatus');
+    if (synced) {
+      statusEl.textContent = '☁ SYNCED';
+      statusEl.className = 'ml-2 px-2 py-0.5 rounded text-[0.6rem] font-bold bg-[#6ddd81]/10 text-[#6ddd81]';
+    } else {
+      statusEl.textContent = '❗ LOCAL ONLY (Backend error)';
+      statusEl.className = 'ml-2 px-2 py-0.5 rounded text-[0.6rem] font-bold bg-[#ff5544]/10 text-[#ff8a7d]';
+    }
+
+    // Store for other pages
+    localStorage.setItem('finzo_transactions', JSON.stringify(parsedData));
+    renderTable(parsedData);
+  }
+
+  function renderTable(data) {
+    const tbody = document.getElementById('txnTable');
+    tbody.innerHTML = '';
+    data.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.className = 'table-row';
+      tr.dataset.type = t.type;
+      tr.dataset.flagged = t.flagged;
+      tr.innerHTML = `
+        <td class="py-2.5 px-3 text-[#c2c6d5] text-[0.7rem]">${t.date}</td>
+        <td class="py-2.5 px-3 text-white text-[0.72rem] font-medium max-w-[200px] truncate">${t.description}</td>
+        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-md bg-[#adc6ff]/08 text-[#c2c6d5] text-[0.6rem] font-bold">${t.category}</span></td>
+        <td class="py-2.5 px-3 text-right font-headline font-bold text-[0.78rem] ${t.type==='credit'?'text-[#6ddd81]':'text-[#ffb4a9]'}">${t.type==='credit'?'+':'−'}₹${Math.abs(t.amount).toLocaleString('en-IN')}</td>
+        <td class="py-2.5 px-3 text-right text-[0.7rem] text-[#c2c6d5]">${t.balance ? '₹'+t.balance.toLocaleString('en-IN') : '—'}</td>
+        <td class="py-2.5 px-3 text-center">
+          ${t.flagged ? '<span class="badge badge-flagged">⚠ Flagged</span>' : (t.type==='credit'?'<span class="badge badge-credit">Credit</span>':'<span class="badge badge-debit">Debit</span>')}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('tableCount').textContent = `Showing ${data.length} rows`;
+  }
+
+  function filterTable(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === filter);
+      b.style.background = b.dataset.filter === filter ? 'rgba(173,198,255,0.12)' : '';
+      b.style.color = b.dataset.filter === filter ? '#adc6ff' : '';
+    });
+    let data = parsedData;
+    if (filter === 'credit') data = parsedData.filter(t => t.type === 'credit');
+    else if (filter === 'debit') data = parsedData.filter(t => t.type === 'debit');
+    else if (filter === 'flagged') data = parsedData.filter(t => t.flagged);
+    renderTable(data);
+  }
+
+  function searchTable(query) {
+    let data = parsedData;
+    if (currentFilter === 'credit') data = data.filter(t => t.type === 'credit');
+    else if (currentFilter === 'debit') data = data.filter(t => t.type === 'debit');
+    else if (currentFilter === 'flagged') data = data.filter(t => t.flagged);
+    if (query) data = data.filter(t => t.description.toLowerCase().includes(query.toLowerCase()) || t.category.toLowerCase().includes(query.toLowerCase()));
+    renderTable(data);
+  }
+
+  function uploadAnother() {
+    parsedData = [];
+    document.getElementById('dot1').className = 'step-dot active'; document.getElementById('dot1').textContent = '1';
+    document.getElementById('dot2').className = 'step-dot pending'; document.getElementById('dot2').textContent = '2'; document.getElementById('step2label').className = 'text-xs font-semibold text-[#8c909f]';
+    document.getElementById('dot3').className = 'step-dot pending'; document.getElementById('dot3').textContent = '3'; document.getElementById('step3label').className = 'text-xs font-semibold text-[#8c909f]';
+    showStep('upload');
+    loadRecentUploads();
+  }
+
+  function saveUploadHistory(name, count) {
+    const history = JSON.parse(localStorage.getItem('finzo_uploads') || '[]');
+    history.unshift({ name, count, date: new Date().toLocaleDateString('en-IN'), ts: Date.now() });
+    localStorage.setItem('finzo_uploads', JSON.stringify(history.slice(0, 10)));
+  }
+
+  async function loadRecentUploads() {
+    try {
+      const history = await FinzoAPI.getUploads();
+      const el = document.getElementById('recentUploads');
+      if (!history || !history.length) {
+        el.innerHTML = '<div class="text-center py-8 text-[#8c909f] text-xs">No uploads yet. Upload your first statement above.</div>';
+        return;
+      }
+      el.innerHTML = history.map(h => `
+        <div class="flex items-center gap-3 py-2.5 border-b border-[#424753]/20 last:border-0">
+          <div class="w-8 h-8 rounded-xl bg-[#adc6ff]/10 flex items-center justify-center flex-shrink-0">
+            <span class="material-symbols-outlined text-[#adc6ff] text-sm">description</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-white truncate">${h.filename || h.name}</p>
+            <p class="text-[0.65rem] text-[#8c909f]">${h.count} transactions · ${h.uploaded_at || h.date}</p>
+          </div>
+          <span class="text-[0.6rem] text-[#6ddd81] font-bold">Processed</span>
+          <button onclick="handleDeleteUpload('${h.upload_id}')" class="ml-2 text-[#ff8a7d] hover:text-[#ff5544]">
+            <span class="material-symbols-outlined text-xs">delete</span>
+          </button>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error("Load uploads error:", err);
+    }
+  }
+
+  async function handleDeleteUpload(id) {
+    if (confirm('Are you sure you want to delete this upload?')) {
+      const res = await FinzoAPI.deleteUpload(id);
+      if (res.success) loadRecentUploads();
+    }
+  }
+
+  window.handleDeleteUpload = handleDeleteUpload;
+
+  function goToFraud() { window.location.href = 'fraud.html'; }
+  function goToAdvisor() { window.location.href = 'advisor.html'; }
+
+  window.handleFile = handleFile;
+  window.filterTable = filterTable;
+  window.searchTable = searchTable;
+  window.uploadAnother = uploadAnother;
+  window.goToFraud = goToFraud;
+  window.goToAdvisor = goToAdvisor;
+  // loadRecentUploads(); // Moved into requireAuth().then() block above
+</script>
+</body>
+</html>

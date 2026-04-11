@@ -1,0 +1,8 @@
+finzo-backend/__pycache__/
+finzo-backend/.env
+finzo-backend/stitch_database.xlsx
+finzo_database.xlsx
+*.pyc
+.DS_Store
+node_modules/
+.vscode/
