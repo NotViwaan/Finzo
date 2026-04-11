@@ -2,7 +2,8 @@
 
 **Finzo** is a modern, AI-powered financial dashboard designed to simplify bank statement analysis. It provides intelligent insights, automated categorization, and advanced fraud detection to help users take control of their digital finances with clarity and ease.
 
-![Finzo Banner](https://images.unsplash.com/photo-1611974714851-48206138d731?q=80&w=2070&auto=format&fit=crop)
+
+
 
 ## ✨ Features
 
